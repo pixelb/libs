@@ -43,6 +43,14 @@ class subProcess:
         self._outeof = self._erreof = 0
 
     def _child(self, cmd):
+        # Note exec doesn't reset SIG_IGN -> SIG_DFL
+        # and python sets SIGPIPE etc. to SIG_IGN, so reset:
+        # http://bugs.python.org/issue1652
+        signals = ('SIGPIPE', 'SIGXFZ', 'SIGXFSZ')
+        for sig in signals:
+            if hasattr(signal, sig):
+                signal.signal(getattr(signal, sig), signal.SIG_DFL)
+
         # Note sh below doesn't setup a seperate group (job control)
         # for non interactive shells (hmm maybe -m option does?)
         os.setpgrp() #seperate group so we can kill it
