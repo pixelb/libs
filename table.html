@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>table</title>
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+  <!--#include virtual="/head.html"-->
+</head>
+<body>
+<p>
+To compile the table example just do:<br>
+<pre class="shell">
+g++ -Wall -D_REENTRANT -lpthread PadThreads.cpp llist.c table.cpp table_test.cpp \
+-o table_test
+</pre>
+<p>
+Note the locking provided by the table class is quite fine grained,
+allowing threads to traverse tables independently. The following
+diagram succinctly describes the locking implementation I think.
+<p>
+<img src="table-locking.png">
+<p>
+Note you still have to be aware of lock inversion. I.E. if you
+have more than 1 table, then threads must lock (acquire) items from the
+tables in the same order. For e.g...
+</p>
+<pre class="snippet">
+Table table1, table2;
+
+thread1() {
+    table1entry-&gt;acquire();
+    /* try to acquire table2entry */
+}
+
+thread2() {
+    table2entry-&gt;acquire();
+    /* try to acquire table1entry */
+}
+</pre>
+<p>
+The deadlock is obvious here but usually much more subtle in real code.
+So across threads, don't invert the locking hierarchy.
+</p>
+<p>
+The following is a UML diagram of the table implementation.
+</p>
+<img src="table.png">
+
+</body>
+</html>
